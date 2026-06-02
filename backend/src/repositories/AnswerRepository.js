@@ -61,8 +61,7 @@ export class AnswerRepository {
     const answerKey = `room:${roomCode}:answers:${questionIndex}`;
 
     try {
-      const exists = await client.hExists(answerKey, playerId);
-      return exists === 1;
+      return await client.hExists(answerKey, playerId);
     } catch (error) {
       logger.error(`Error checking answer existence: ${error.message}`);
       throw error;

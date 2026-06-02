@@ -9,6 +9,7 @@ export class QuizRepository {
     try {
       await client.hSet(key, {
         quizId,
+        hostId: quizData.hostId,
         title: quizData.title,
         description: quizData.description || '',
         category: quizData.category || 'General',
@@ -96,18 +97,40 @@ export class QuizRepository {
     try {
       const updateData = {};
 
-      if (updates.title) {
+      if (updates.title !== undefined) {
         updateData.title = updates.title;
       }
-      if (updates.description) {
+      if (updates.description !== undefined) {
         updateData.description = updates.description;
       }
-      if (updates.category) {
+      if (updates.category !== undefined) {
         updateData.category = updates.category;
       }
 
       if (Object.keys(updateData).length > 0) {
         await client.hSet(key, updateData);
+      }
+
+      if (updates.questions) {
+        const oldQuiz = await this.getQuiz(quizId);
+        const oldCount = oldQuiz?.questions?.length || 0;
+
+        for (let i = 0; i < oldCount; i++) {
+          await client.del(`quiz:${quizId}:question:${i}`);
+        }
+
+        await client.hSet(key, { questionCount: updates.questions.length });
+
+        for (let i = 0; i < updates.questions.length; i++) {
+          const questionKey = `quiz:${quizId}:question:${i}`;
+          await client.hSet(questionKey, {
+            index: i,
+            questionText: updates.questions[i].questionText,
+            options: JSON.stringify(updates.questions[i].options),
+            correctOption: updates.questions[i].correctOption,
+            timeLimit: updates.questions[i].timeLimit,
+          });
+        }
       }
 
       logger.info(`Quiz updated: ${quizId}`);

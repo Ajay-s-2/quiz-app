@@ -5,7 +5,7 @@ import logger from '../config/logger.js';
 export const createQuiz = asyncHandler(async (req, res) => {
   const quizData = req.validated;
 
-  const result = await QuizService.createQuiz(quizData);
+  const result = await QuizService.createQuiz(quizData, req.user.userId);
 
   logger.info(`Quiz created: ${result.quizId}`);
   res.status(201).json({
@@ -18,12 +18,26 @@ export const createQuiz = asyncHandler(async (req, res) => {
 export const getQuiz = asyncHandler(async (req, res) => {
   const { quizId } = req.params;
 
-  const quiz = await QuizService.getQuiz(quizId);
+  const quiz = await QuizService.getQuiz(quizId, req.user.userId);
 
   res.status(200).json({
     status: 200,
     message: 'Quiz retrieved successfully',
     data: quiz,
+  });
+});
+
+export const getPlayableQuiz = asyncHandler(async (req, res) => {
+  const { quizId } = req.params;
+  const quiz = await QuizService.getQuiz(quizId);
+  const publicQuiz = { ...quiz };
+  delete publicQuiz.hostId;
+  const questions = quiz.questions.map(({ correctOption, ...question }) => question);
+
+  res.status(200).json({
+    status: 200,
+    message: 'Playable quiz retrieved successfully',
+    data: { ...publicQuiz, questions },
   });
 });
 
@@ -47,6 +61,7 @@ export const getAllQuizzes = asyncHandler(async (req, res) => {
     limit: parseInt(limit, 10),
     search,
     category,
+    hostId: req.user.userId,
   });
 
   res.status(200).json({
@@ -60,7 +75,7 @@ export const updateQuiz = asyncHandler(async (req, res) => {
   const { quizId } = req.params;
   const updates = req.validated;
 
-  const quiz = await QuizService.updateQuiz(quizId, updates);
+  const quiz = await QuizService.updateQuiz(quizId, updates, req.user.userId);
 
   logger.info(`Quiz updated: ${quizId}`);
   res.status(200).json({
@@ -73,7 +88,7 @@ export const updateQuiz = asyncHandler(async (req, res) => {
 export const deleteQuiz = asyncHandler(async (req, res) => {
   const { quizId } = req.params;
 
-  await QuizService.deleteQuiz(quizId);
+  await QuizService.deleteQuiz(quizId, req.user.userId);
 
   logger.info(`Quiz deleted: ${quizId}`);
   res.status(200).json({
@@ -85,7 +100,7 @@ export const deleteQuiz = asyncHandler(async (req, res) => {
 export const getQuizStatistics = asyncHandler(async (req, res) => {
   const { quizId } = req.params;
 
-  const stats = await QuizService.getStatistics(quizId);
+  const stats = await QuizService.getStatistics(quizId, req.user.userId);
 
   res.status(200).json({
     status: 200,
@@ -97,6 +112,7 @@ export const getQuizStatistics = asyncHandler(async (req, res) => {
 export default {
   createQuiz,
   getQuiz,
+  getPlayableQuiz,
   getQuestion,
   getAllQuizzes,
   updateQuiz,

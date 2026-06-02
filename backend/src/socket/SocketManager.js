@@ -1,9 +1,10 @@
 import { Server } from 'socket.io';
 import { config } from '../config/index.js';
 import logger from '../config/logger.js';
-import RoomService from '../services/RoomService.js';
 import PlayerRepository from '../repositories/PlayerRepository.js';
 import RoomRepository from '../repositories/RoomRepository.js';
+import QuizRepository from '../repositories/QuizRepository.js';
+import ScoringService from '../services/ScoringService.js';
 
 class SocketManager {
   constructor(httpServer) {
@@ -47,6 +48,7 @@ class SocketManager {
   }
 
   async handleJoinRoom(socket, data, callback) {
+    callback = typeof callback === 'function' ? callback : () => {};
     const { roomCode, playerName } = data;
 
     try {
@@ -93,6 +95,7 @@ class SocketManager {
       callback({
         success: true,
         playerId,
+        quizId: room.quizId,
         players: updatedPlayers,
       });
     } catch (error) {
@@ -102,6 +105,7 @@ class SocketManager {
   }
 
   async handleLeaveRoom(socket, data, callback) {
+    callback = typeof callback === 'function' ? callback : () => {};
     const { roomCode, playerId } = data;
 
     try {
@@ -129,6 +133,7 @@ class SocketManager {
   }
 
   async handleStartQuiz(socket, data, callback) {
+    callback = typeof callback === 'function' ? callback : () => {};
     const { roomCode, hostId } = data;
 
     try {
@@ -163,6 +168,7 @@ class SocketManager {
   }
 
   async handleSubmitAnswer(socket, data, callback) {
+    callback = typeof callback === 'function' ? callback : () => {};
     const { roomCode, questionIndex, answerIndex } = data;
     const playerId = socket.data.playerId;
 
@@ -181,9 +187,13 @@ class SocketManager {
         return callback({ success: false, error: 'Player not found' });
       }
 
-      // Store answer (actual scoring happens at question end)
-      const AnswerRepository = (await import('../repositories/AnswerRepository.js')).default;
-      await AnswerRepository.submitAnswer(roomCode, questionIndex, playerId, answerIndex);
+      const result = await ScoringService.submitAnswer(
+        roomCode,
+        questionIndex,
+        playerId,
+        answerIndex,
+        room.quizId
+      );
 
       // Notify room that answer was received
       this.io.to(roomCode).emit('answer-received', {
@@ -193,7 +203,10 @@ class SocketManager {
       });
 
       logger.info(`Answer submitted by ${playerId} for question ${questionIndex}`);
-      callback({ success: true });
+      const leaderboard = await ScoringService.calculateLeaderboard(roomCode);
+      this.io.to(roomCode).emit('leaderboard-update', { leaderboard });
+
+      callback({ success: true, ...result });
     } catch (error) {
       logger.error(`Error submitting answer: ${error.message}`);
       callback({ success: false, error: error.message });
@@ -201,7 +214,8 @@ class SocketManager {
   }
 
   async handleNextQuestion(socket, data, callback) {
-    const { roomCode, hostId, questionIndex, correctOption } = data;
+    callback = typeof callback === 'function' ? callback : () => {};
+    const { roomCode, hostId, questionIndex } = data;
 
     try {
       const room = await RoomRepository.getRoom(roomCode);
@@ -219,18 +233,15 @@ class SocketManager {
         currentQuestion: questionIndex + 1,
       });
 
-      // Get all answers for this question
       const AnswerRepository = (await import('../repositories/AnswerRepository.js')).default;
       const answers = await AnswerRepository.getAllAnswers(roomCode, questionIndex);
-
-      // Calculate scores for this question
-      const ScoringService = (await import('../services/ScoringService.js')).default;
+      const question = await QuizRepository.getQuestion(room.quizId, questionIndex);
       const leaderboard = await ScoringService.calculateLeaderboard(roomCode);
 
       // Broadcast question results
       this.io.to(roomCode).emit('question-ended', {
         questionIndex,
-        correctOption,
+        correctOption: question?.correctOption,
         answers,
         leaderboard,
       });
@@ -244,6 +255,7 @@ class SocketManager {
   }
 
   async handleEndQuiz(socket, data, callback) {
+    callback = typeof callback === 'function' ? callback : () => {};
     const { roomCode, hostId } = data;
 
     try {
@@ -264,7 +276,6 @@ class SocketManager {
       });
 
       // Get final leaderboard
-      const ScoringService = (await import('../services/ScoringService.js')).default;
       const finalLeaderboard = await ScoringService.calculateLeaderboard(roomCode);
 
       // Broadcast quiz ended

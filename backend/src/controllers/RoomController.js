@@ -4,7 +4,7 @@ import logger from '../config/logger.js';
 
 export const createRoom = asyncHandler(async (req, res) => {
   const { quizId } = req.validated;
-  const hostId = req.headers['x-player-id'] || 'anonymous';
+  const hostId = req.user?.userId || req.headers['x-player-id'] || 'anonymous';
 
   const result = await RoomService.createRoom(quizId, hostId);
 

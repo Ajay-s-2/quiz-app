@@ -5,25 +5,36 @@ import logger from '../config/logger.js';
 import { getRedisClient } from '../config/redis.js';
 
 export class QuizService {
-  async createQuiz(quizData) {
+  assertQuizAccess(quiz, hostId) {
+    if (!hostId || quiz.hostId !== hostId) {
+      throw new AppError('Quiz not found', 404);
+    }
+  }
+
+  async createQuiz(quizData, hostId) {
     try {
       const quizId = generateQuizId();
+      const ownedQuizData = { ...quizData, hostId };
 
-      const quiz = await QuizRepository.createQuiz(quizId, quizData);
+      await QuizRepository.createQuiz(quizId, ownedQuizData);
 
       logger.info(`Quiz created with ID ${quizId}`);
-      return { quizId, ...quizData };
+      return { quizId, ...ownedQuizData };
     } catch (error) {
       logger.error(`Error creating quiz: ${error.message}`);
       throw error;
     }
   }
 
-  async getQuiz(quizId) {
+  async getQuiz(quizId, hostId = null) {
     try {
       const quiz = await QuizRepository.getQuiz(quizId);
       if (!quiz) {
         throw new AppError('Quiz not found', 404);
+      }
+
+      if (hostId) {
+        this.assertQuizAccess(quiz, hostId);
       }
 
       return quiz;
@@ -35,12 +46,14 @@ export class QuizService {
 
   async getAllQuizzes(options = {}) {
     try {
-      const { page = 1, limit = 10, search = '', category = '' } = options;
+      const { page = 1, limit = 10, search = '', category = '', hostId } = options;
       const client = getRedisClient();
 
       // Get all quiz keys
       const keys = await client.keys('quiz:*');
-      const quizMetaKeys = keys.filter((k) => !k.includes(':question:'));
+      const quizMetaKeys = keys.filter(
+        (k) => !k.includes(':question:') && !k.includes(':stats')
+      );
 
       let quizzes = [];
       for (const key of quizMetaKeys) {
@@ -48,6 +61,10 @@ export class QuizService {
         if (Object.keys(quiz).length > 0) {
           quizzes.push(quiz);
         }
+      }
+
+      if (hostId) {
+        quizzes = quizzes.filter((q) => q.hostId === hostId);
       }
 
       // Filter by search
@@ -109,44 +126,31 @@ export class QuizService {
     }
   }
 
-  async updateQuiz(quizId, updates) {
+  async updateQuiz(quizId, updates, hostId) {
     try {
       const quiz = await QuizRepository.getQuiz(quizId);
       if (!quiz) {
         throw new AppError('Quiz not found', 404);
       }
+      this.assertQuizAccess(quiz, hostId);
 
-      const client = getRedisClient();
-      const key = `quiz:${quizId}`;
-
-      // Update quiz metadata
-      const allowedUpdates = ['title', 'description', 'category'];
-      const updateData = {};
-
-      for (const [key, value] of Object.entries(updates)) {
-        if (allowedUpdates.includes(key)) {
-          updateData[key] = value;
-        }
-      }
-
-      if (Object.keys(updateData).length > 0) {
-        await client.hSet(key, updateData);
-      }
+      await QuizRepository.updateQuiz(quizId, updates);
 
       logger.info(`Quiz ${quizId} updated`);
-      return { quizId, ...updateData };
+      return await QuizRepository.getQuiz(quizId);
     } catch (error) {
       logger.error(`Error updating quiz: ${error.message}`);
       throw error;
     }
   }
 
-  async deleteQuiz(quizId) {
+  async deleteQuiz(quizId, hostId) {
     try {
       const quiz = await QuizRepository.getQuiz(quizId);
       if (!quiz) {
         throw new AppError('Quiz not found', 404);
       }
+      this.assertQuizAccess(quiz, hostId);
 
       await QuizRepository.deleteQuiz(quizId);
       logger.info(`Quiz ${quizId} deleted`);
@@ -172,12 +176,13 @@ export class QuizService {
     }
   }
 
-  async getStatistics(quizId) {
+  async getStatistics(quizId, hostId) {
     try {
       const quiz = await QuizRepository.getQuiz(quizId);
       if (!quiz) {
         throw new AppError('Quiz not found', 404);
       }
+      this.assertQuizAccess(quiz, hostId);
 
       const client = getRedisClient();
 

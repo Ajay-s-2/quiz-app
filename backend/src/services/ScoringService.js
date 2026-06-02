@@ -33,6 +33,9 @@ export class ScoringService {
 
       // Update player score
       const player = await PlayerRepository.getPlayer(roomCode, playerId);
+      if (!player) {
+        throw new AppError('Player not found', 404);
+      }
       const currentScore = parseInt(player.score, 10) || 0;
       const newScore = currentScore + points;
 
@@ -85,9 +88,10 @@ export class ScoringService {
       const stats = {
         totalResponses: Object.keys(answers).length,
         totalPlayers: players.length,
-        responsePercentage: Math.round(
-          (Object.keys(answers).length / players.length) * 100
-        ),
+        responsePercentage:
+          players.length > 0
+            ? Math.round((Object.keys(answers).length / players.length) * 100)
+            : 0,
         answerDistribution: {},
       };
 

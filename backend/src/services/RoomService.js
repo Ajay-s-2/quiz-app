@@ -1,7 +1,6 @@
 import RoomRepository from '../repositories/RoomRepository.js';
 import PlayerRepository from '../repositories/PlayerRepository.js';
 import QuizRepository from '../repositories/QuizRepository.js';
-import AnswerRepository from '../repositories/AnswerRepository.js';
 import { generateRoomCode, generatePlayerId } from '../utils/helpers.js';
 import AppError from '../utils/AppError.js';
 import logger from '../config/logger.js';
@@ -9,13 +8,22 @@ import logger from '../config/logger.js';
 export class RoomService {
   async createRoom(quizId, hostId) {
     try {
+      const quiz = await QuizRepository.getQuiz(quizId);
+      if (!quiz) {
+        throw new AppError('Quiz not found', 404);
+      }
+      if (quiz.hostId !== hostId) {
+        throw new AppError('Quiz not found', 404);
+      }
+
       let roomCode;
+      let existingRoom;
       let attempts = 0;
 
       // Generate unique room code
       do {
         roomCode = generateRoomCode();
-        const existingRoom = await RoomRepository.getRoom(roomCode);
+        existingRoom = await RoomRepository.getRoom(roomCode);
         attempts++;
         if (attempts > 10) {
           throw new AppError('Failed to generate unique room code', 500);

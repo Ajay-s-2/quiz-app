@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import { config } from './config/index.js';
 import { connectRedis } from './config/redis.js';
 import logger from './config/logger.js';
+import AuthService from './services/AuthService.js';
 import { initializeSocket } from './socket/SocketManager.js';
 import apiRoutes from './routes/index.js';
 import { globalErrorHandler } from './utils/errorHandler.js';
@@ -44,6 +45,7 @@ app.use(globalErrorHandler);
 const startServer = async () => {
   try {
     await connectRedis();
+    await AuthService.ensureDefaultAdmin();
     
     // Initialize Socket.IO
     initializeSocket(httpServer);
