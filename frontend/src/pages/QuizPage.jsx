@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../hooks/useToast'
 import { useSocket } from '../hooks/useSocket'
 import { quizAPI } from '../services/api'
-import { Card, Loading, Button } from '../components/Common'
+import { Card, Loading } from '../components/Common'
 import { CountdownTimer } from '../components/CountdownTimer'
 import { ProgressBar } from '../components/ProgressBar'
 
@@ -37,34 +37,12 @@ const QuizPage = () => {
   // Load quiz data
   const loadQuiz = async () => {
     try {
-      // Mock quiz data - in production fetch from API
-      const mockQuiz = {
-        title: 'General Knowledge Quiz',
-        questions: [
-          {
-            index: 0,
-            questionText: 'What is the capital of France?',
-            options: ['London', 'Paris', 'Berlin', 'Madrid'],
-            timeLimit: 10,
-          },
-          {
-            index: 1,
-            questionText: 'Which planet is known as the Red Planet?',
-            options: ['Venus', 'Mars', 'Jupiter', 'Saturn'],
-            timeLimit: 10,
-          },
-          {
-            index: 2,
-            questionText: 'Who wrote Romeo and Juliet?',
-            options: ['Mark Twain', 'William Shakespeare', 'Jane Austen', 'Charles Dickens'],
-            timeLimit: 15,
-          },
-        ],
-      }
+      const response = await quizAPI.getPlayable(user.quizId)
+      const playableQuiz = response.data.data
 
-      setQuiz(mockQuiz)
-      setCurrentQuestion(mockQuiz.questions[0])
-      setTimeLeft(mockQuiz.questions[0].timeLimit)
+      setQuiz(playableQuiz)
+      setCurrentQuestion(playableQuiz.questions[0])
+      setTimeLeft(playableQuiz.questions[0].timeLimit)
       setLoading(false)
     } catch (error) {
       addToast('Failed to load quiz', 'error')
@@ -95,7 +73,7 @@ const QuizPage = () => {
       setLeaderboard(data.leaderboard)
       // Show results for 2 seconds then move to next
       setTimeout(() => {
-        moveToNextQuestion()
+        advanceToNextQuestion()
       }, 2000)
     })
 
@@ -108,7 +86,7 @@ const QuizPage = () => {
       off(socketEvents.QUESTION_ENDED, null)
       off(socketEvents.QUIZ_ENDED, null)
     }
-  }, [on, off, socketEvents, roomCode, navigate, addToast])
+  }, [on, off, socketEvents, roomCode, navigate, addToast, currentQuestionIndex, quiz, user])
 
   const handleTimeExpired = () => {
     setAnswered(true)
@@ -116,7 +94,7 @@ const QuizPage = () => {
 
     if (user.isHost) {
       setTimeout(() => {
-        moveToNextQuestion()
+        endCurrentQuestion()
       }, 1500)
     }
   }
@@ -132,30 +110,42 @@ const QuizPage = () => {
       roomCode,
       questionIndex: currentQuestionIndex,
       answerIndex,
+    }, (response) => {
+      if (!response?.success) {
+        setAnswered(false)
+        setSelectedAnswer(null)
+        addToast(response?.error || 'Failed to submit answer', 'error')
+      }
     })
 
     addToast('Answer submitted!', 'success')
   }
 
-  const moveToNextQuestion = () => {
+  const endCurrentQuestion = () => {
+    emit(socketEvents.NEXT_QUESTION, {
+      roomCode,
+      hostId: user.playerId,
+      questionIndex: currentQuestionIndex,
+    }, (response) => {
+      if (!response?.success) {
+        addToast(response?.error || 'Failed to advance question', 'error')
+      }
+    })
+  }
+
+  const advanceToNextQuestion = () => {
     const nextIndex = currentQuestionIndex + 1
 
     if (nextIndex >= quiz.questions.length) {
       // Quiz ended
       if (user.isHost) {
-        emit(socketEvents.END_QUIZ, { roomCode, hostId: user.playerId })
+        emit(socketEvents.END_QUIZ, { roomCode, hostId: user.playerId }, (response) => {
+          if (!response?.success) {
+            addToast(response?.error || 'Failed to end quiz', 'error')
+          }
+        })
       }
       return
-    }
-
-    // Notify server to move to next question
-    if (user.isHost) {
-      emit(socketEvents.NEXT_QUESTION, {
-        roomCode,
-        hostId: user.playerId,
-        questionIndex: currentQuestionIndex,
-        correctOption: 0, // Get from quiz
-      })
     }
 
     setCurrentQuestionIndex(nextIndex)

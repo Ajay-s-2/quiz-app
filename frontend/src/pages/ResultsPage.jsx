@@ -39,7 +39,7 @@ const ResultsPage = () => {
         {/* Winner */}
         {leaderboard[0] && (
           <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg p-8 mb-8 text-center">
-            <p className="text-yellow-900 font-semibold text-sm mb-2">🏆 Winner</p>
+            <p className="text-yellow-900 font-semibold text-sm mb-2">Winner</p>
             <h2 className="text-3xl font-bold text-white mb-2">{leaderboard[0].name}</h2>
             <p className="text-2xl font-bold text-yellow-900">{leaderboard[0].score} points</p>
           </div>
@@ -49,7 +49,7 @@ const ResultsPage = () => {
         <h3 className="text-xl font-bold text-gray-800 mb-4">Final Results</h3>
         <div className="space-y-3 mb-8">
           {leaderboard.map((player, idx) => {
-            const medals = ['🥇', '🥈', '🥉']
+            const medals = ['1', '2', '3']
             const medal = idx < 3 ? medals[idx] : '  '
 
             return (

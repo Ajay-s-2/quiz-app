@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../hooks/useToast'
 import { useSocket } from '../hooks/useSocket'
+import { roomAPI } from '../services/api'
 import { Card, Loading } from '../components/Common'
 
 const LobbyPage = () => {
@@ -23,6 +24,7 @@ const LobbyPage = () => {
     }
 
     setIsHost(user.isHost || false)
+    fetchRoom()
 
     // Listen for quiz start
     on(socketEvents.QUIZ_STARTED, (data) => {
@@ -47,6 +49,15 @@ const LobbyPage = () => {
       off(socketEvents.PLAYER_LEFT, null)
     }
   }, [user, roomCode, navigate, on, off, socketEvents, addToast])
+
+  const fetchRoom = async () => {
+    try {
+      const response = await roomAPI.get(roomCode)
+      setPlayers(response.data.data?.players || [])
+    } catch (error) {
+      addToast('Failed to load room', 'error')
+    }
+  }
 
   if (!user) {
     return <Loading />

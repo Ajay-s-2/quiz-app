@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import { quizAPI } from '../services/api'
@@ -23,6 +23,40 @@ const QuizCreateEdit = () => {
       },
     ],
   })
+
+  useEffect(() => {
+    if (quizId) {
+      loadQuiz()
+    }
+  }, [quizId])
+
+  const loadQuiz = async () => {
+    try {
+      setLoading(true)
+      const response = await quizAPI.get(quizId)
+      const quiz = response.data.data
+      setFormData({
+        title: quiz.title || '',
+        description: quiz.description || '',
+        category: quiz.category || 'General',
+        questions: quiz.questions?.length
+          ? quiz.questions
+          : [
+              {
+                questionText: '',
+                options: ['', '', '', ''],
+                correctOption: 0,
+                timeLimit: 10,
+              },
+            ],
+      })
+    } catch (error) {
+      addToast('Failed to load quiz', 'error')
+      navigate('/host/dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleTitleChange = (e) => {
     setFormData({ ...formData, title: e.target.value })
@@ -103,7 +137,7 @@ const QuizCreateEdit = () => {
         const response = await quizAPI.create(formData)
         addToast('Quiz created successfully!', 'success')
       }
-      navigate('/admin')
+      navigate('/host/dashboard')
     } catch (error) {
       addToast('Failed to save quiz', 'error')
     } finally {
@@ -217,7 +251,7 @@ const QuizCreateEdit = () => {
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Option {optIndex + 1}
                             {question.correctOption === optIndex && (
-                              <span className="text-green-600 ml-2">✓ Correct</span>
+                              <span className="text-green-600 ml-2">Correct</span>
                             )}
                           </label>
                           <Input
@@ -241,7 +275,7 @@ const QuizCreateEdit = () => {
                             }`}
                           >
                             {question.correctOption === optIndex
-                              ? '✓ Correct Answer'
+                              ? 'Correct Answer'
                               : 'Set as Correct'}
                           </button>
                         </div>
@@ -290,7 +324,7 @@ const QuizCreateEdit = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/admin')}
+                onClick={() => navigate('/host/dashboard')}
                 className="flex-1"
               >
                 Cancel

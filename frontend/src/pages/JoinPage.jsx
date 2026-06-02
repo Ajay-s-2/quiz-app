@@ -63,10 +63,11 @@ const JoinPage = () => {
           playerName,
           roomCode: roomCode.toUpperCase(),
           isHost: false,
+          quizId: response.quizId,
         })
 
         addToast(`Joined as ${playerName}!`, 'success')
-        navigate(`/quiz/${roomCode.toUpperCase()}`)
+        navigate(`/lobby/${roomCode.toUpperCase()}`)
       })
     } catch (error) {
       setLoading(false)

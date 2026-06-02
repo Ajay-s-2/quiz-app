@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { getSocket, socketEvents } from '../services/socket'
 
 export const useSocket = (roomCode) => {
@@ -17,7 +17,7 @@ export const useSocket = (roomCode) => {
     }
   }, [])
 
-  const emit = (event, data, callback) => {
+  const emit = useCallback((event, data, callback) => {
     if (socketRef.current) {
       if (callback) {
         socketRef.current.emit(event, data, callback)
@@ -25,25 +25,29 @@ export const useSocket = (roomCode) => {
         socketRef.current.emit(event, data)
       }
     }
-  }
+  }, [])
 
-  const on = (event, callback) => {
+  const on = useCallback((event, callback) => {
     if (socketRef.current) {
       socketRef.current.on(event, callback)
     }
-  }
+  }, [])
 
-  const off = (event, callback) => {
-    if (socketRef.current && callback) {
-      socketRef.current.off(event, callback)
+  const off = useCallback((event, callback) => {
+    if (socketRef.current) {
+      if (callback) {
+        socketRef.current.off(event, callback)
+      } else {
+        socketRef.current.removeAllListeners(event)
+      }
     }
-  }
+  }, [])
 
-  const once = (event, callback) => {
+  const once = useCallback((event, callback) => {
     if (socketRef.current) {
       socketRef.current.once(event, callback)
     }
-  }
+  }, [])
 
   return { socket: socketRef.current, emit, on, off, once, socketEvents }
 }

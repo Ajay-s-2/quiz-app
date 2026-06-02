@@ -13,10 +13,18 @@ const HomePage = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <Link to="/host">
+          <Link to="/signup">
             <button className="btn-primary text-lg">
-              Create & Host Quiz
+              Sign Up
             </button>
+          </Link>
+          <Link to="/host">
+            <button className="btn-outline text-lg">
+              Host Login
+            </button>
+          </Link>
+          <Link to="/login">
+            <button className="btn-outline text-lg">Admin Login</button>
           </Link>
           <Link to="/join">
             <button className="btn-outline text-lg">Join Quiz</button>

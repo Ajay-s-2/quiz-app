@@ -46,10 +46,10 @@ const QuizStatistics = () => {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate('/host/dashboard')}
             className="text-white border-white hover:bg-white hover:text-indigo-600"
           >
-            ← Back to Dashboard
+            Back to Dashboard
           </Button>
         </div>
 
@@ -179,7 +179,7 @@ const QuizStatistics = () => {
         <div className="flex gap-4 mt-8">
           <Button
             variant="primary"
-            onClick={() => navigate(`/admin/quiz/${quizId}/edit`)}
+            onClick={() => navigate(`/host/quiz/${quizId}/edit`)}
             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
           >
             Edit Quiz

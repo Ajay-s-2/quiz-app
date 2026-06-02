@@ -1,22 +1,30 @@
 import React from 'react'
 import { AuthProvider } from './contexts/AuthContext'
 import { QuizProvider } from './contexts/QuizContext'
-import { useToast } from './hooks/useToast'
+import { ToastProvider, useToast } from './hooks/useToast'
 import { ToastContainer } from './components/Toast'
 import Routes from './routes'
 
-function AppWithProviders() {
+function AppContent() {
   const { toasts, removeToast } = useToast()
 
   return (
-    <AuthProvider>
-      <QuizProvider>
-        <div className="min-h-screen">
-          <Routes />
-          <ToastContainer toasts={toasts} onRemove={removeToast} />
-        </div>
-      </QuizProvider>
-    </AuthProvider>
+    <div className="min-h-screen">
+      <Routes />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </div>
+  )
+}
+
+function AppWithProviders() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <QuizProvider>
+          <AppContent />
+        </QuizProvider>
+      </AuthProvider>
+    </ToastProvider>
   )
 }
 

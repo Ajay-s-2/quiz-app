@@ -1,217 +1,231 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../hooks/useToast'
-import { quizAPI } from '../services/api'
-import { Card, Button, Input, Loading } from '../components/Common'
+import { authAPI } from '../services/api'
+import { Button, Card, Input, Loading } from '../components/Common'
+
+const emptyForm = {
+  name: '',
+  email: '',
+  password: '',
+}
 
 const AdminDashboard = () => {
-  const [quizzes, setQuizzes] = useState([])
+  const [hosts, setHosts] = useState([])
+  const [formData, setFormData] = useState(emptyForm)
+  const [editingHostId, setEditingHostId] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [selectedQuiz, setSelectedQuiz] = useState(null)
-  const [page, setPage] = useState(1)
+  const [saving, setSaving] = useState(false)
 
-  const navigate = useNavigate()
+  const { logout } = useAuth()
   const { addToast } = useToast()
 
   useEffect(() => {
-    fetchQuizzes()
-  }, [page, searchTerm, categoryFilter])
+    fetchHosts()
+  }, [])
 
-  const fetchQuizzes = async () => {
+  const fetchHosts = async () => {
     try {
       setLoading(true)
-      const response = await quizAPI.getAll({
-        page,
-        limit: 10,
-        search: searchTerm,
-        category: categoryFilter,
+      const response = await authAPI.getHosts()
+      setHosts(response.data.data || [])
+    } catch (error) {
+      addToast('Failed to load host accounts', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleChange = (field, value) => {
+    setFormData((current) => ({ ...current, [field]: value }))
+  }
+
+  const resetForm = () => {
+    setFormData(emptyForm)
+    setEditingHostId(null)
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setSaving(true)
+
+    try {
+      if (editingHostId) {
+        const updates = {
+          name: formData.name,
+          email: formData.email,
+        }
+        if (formData.password.trim()) {
+          updates.password = formData.password
+        }
+
+        await authAPI.updateHost(editingHostId, updates)
+        addToast('Host account updated', 'success')
+      } else {
+        await authAPI.createHost(formData)
+        addToast('Host account created', 'success')
+      }
+
+      resetForm()
+      fetchHosts()
+    } catch (error) {
+      addToast(error.response?.data?.message || 'Failed to save host', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEdit = (host) => {
+    setEditingHostId(host.userId)
+    setFormData({
+      name: host.name,
+      email: host.email,
+      password: '',
+    })
+  }
+
+  const handleStatusToggle = async (host) => {
+    try {
+      await authAPI.updateHost(host.userId, {
+        status: host.status === 'active' ? 'inactive' : 'active',
       })
-
-      if (response.data.data) {
-        setQuizzes(response.data.data.quizzes)
-      }
+      addToast('Host status updated', 'success')
+      fetchHosts()
     } catch (error) {
-      addToast('Failed to load quizzes', 'error')
-    } finally {
-      setLoading(false)
+      addToast('Failed to update host status', 'error')
     }
   }
 
-  const handleSeedQuizzes = async () => {
-    try {
-      setLoading(true)
-      const response = await quizAPI.seed()
-      if (response.data.data.success) {
-        addToast(`${response.data.data.created} quizzes seeded successfully!`, 'success')
-        fetchQuizzes()
-      }
-    } catch (error) {
-      addToast('Failed to seed quizzes', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleDeleteQuiz = async (quizId) => {
-    if (!window.confirm('Are you sure you want to delete this quiz?')) return
+  const handleDelete = async (host) => {
+    if (!window.confirm(`Delete host account ${host.email}?`)) return
 
     try {
-      await quizAPI.delete(quizId)
-      addToast('Quiz deleted successfully', 'success')
-      fetchQuizzes()
+      await authAPI.deleteHost(host.userId)
+      addToast('Host account deleted', 'success')
+      fetchHosts()
+      if (editingHostId === host.userId) resetForm()
     } catch (error) {
-      addToast('Failed to delete quiz', 'error')
+      addToast('Failed to delete host', 'error')
     }
   }
 
-  const handleViewStatistics = (quizId) => {
-    navigate(`/admin/quiz/${quizId}/stats`)
-  }
-
-  if (loading && quizzes.length === 0) {
-    return <Loading />
-  }
+  if (loading && hosts.length === 0) return <Loading />
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white">Quiz Admin Dashboard</h1>
-          <Button
-            variant="primary"
-            onClick={() => setShowCreateForm(true)}
-            className="bg-white text-indigo-600 hover:bg-gray-100"
-          >
-            + Create Quiz
-          </Button>
-        </div>
-
-        {/* Seed Quizzes Button */}
-        <div className="mb-6">
-          <Button
-            variant="secondary"
-            onClick={handleSeedQuizzes}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white"
-          >
-            Seed Sample Quizzes
-          </Button>
-        </div>
-
-        {/* Search & Filter */}
-        <Card className="mb-6 bg-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              type="text"
-              placeholder="Search quizzes by title or description..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value)
-                setPage(1)
-              }}
-            />
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-lg"
-              value={categoryFilter}
-              onChange={(e) => {
-                setCategoryFilter(e.target.value)
-                setPage(1)
-              }}
-            >
-              <option value="">All Categories</option>
-              <option value="General">General Knowledge</option>
-              <option value="Science">Science</option>
-              <option value="History">History</option>
-              <option value="Geography">Geography</option>
-              <option value="Technology">Technology</option>
-            </select>
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white">Host Accounts</h1>
+            <p className="text-indigo-100 mt-2">Admin manages host access only</p>
           </div>
-        </Card>
+          <Button variant="outline" className="text-white border-white" onClick={logout}>
+            Logout
+          </Button>
+        </div>
 
-        {/* Quizzes List */}
-        <div className="grid grid-cols-1 gap-4">
-          {quizzes.length === 0 ? (
-            <Card className="text-center py-8">
-              <p className="text-gray-600">No quizzes found. Try seeding sample quizzes!</p>
-            </Card>
-          ) : (
-            quizzes.map((quiz) => (
-              <Card
-                key={quiz.quizId}
-                className="bg-white hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">{quiz.title}</h3>
-                    <p className="text-gray-600">{quiz.description}</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Category: <span className="font-semibold">{quiz.category}</span>
-                    </p>
-                  </div>
-                  <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-semibold">
-                    {quiz.questions?.length || 0} Questions
-                  </span>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+          <Card>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              {editingHostId ? 'Edit Host' : 'Create Host'}
+            </h2>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate(`/quiz/${quiz.quizId}`)}
-                    className="text-sm"
-                  >
-                    View Quiz
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <Input
+                  value={formData.name}
+                  onChange={(event) => handleChange('name', event.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(event) => handleChange('email', event.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password {editingHostId ? '(leave blank to keep current)' : ''}
+                </label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(event) => handleChange('password', event.target.value)}
+                  required={!editingHostId}
+                  minLength={editingHostId ? undefined : 8}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button type="submit" variant="primary" disabled={saving} className="flex-1">
+                  {saving ? 'Saving...' : editingHostId ? 'Update' : 'Create'}
+                </Button>
+                {editingHostId && (
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancel
                   </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleViewStatistics(quiz.quizId)}
-                    className="text-sm"
-                  >
-                    Statistics
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/admin/quiz/${quiz.quizId}/edit`)}
-                    className="text-sm"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleDeleteQuiz(quiz.quizId)}
-                    className="text-sm bg-red-500 hover:bg-red-600 text-white"
-                  >
-                    Delete
-                  </Button>
-                </div>
+                )}
+              </div>
+            </form>
+          </Card>
+
+          <div className="space-y-4">
+            {hosts.length === 0 ? (
+              <Card className="text-center py-10">
+                <p className="text-gray-600">No host accounts yet.</p>
               </Card>
-            ))
-          )}
-        </div>
+            ) : (
+              hosts.map((host) => (
+                <Card key={host.userId}>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-bold text-gray-800">{host.name}</h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            host.status === 'active'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-200 text-gray-700'
+                          }`}
+                        >
+                          {host.status}
+                        </span>
+                      </div>
+                      <p className="text-gray-600">{host.email}</p>
+                    </div>
 
-        {/* Pagination */}
-        {quizzes.length > 0 && (
-          <div className="flex justify-center gap-4 mt-8">
-            <Button
-              variant="outline"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="text-white border-white hover:bg-white hover:text-indigo-600"
-            >
-              Previous
-            </Button>
-            <span className="text-white py-2">Page {page}</span>
-            <Button
-              variant="outline"
-              onClick={() => setPage(page + 1)}
-              className="text-white border-white hover:bg-white hover:text-indigo-600"
-            >
-              Next
-            </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" className="text-sm" onClick={() => handleEdit(host)}>
+                        Edit
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        className="text-sm"
+                        onClick={() => handleStatusToggle(host)}
+                      >
+                        {host.status === 'active' ? 'Disable' : 'Enable'}
+                      </Button>
+                      <Button
+                        variant="danger"
+                        className="text-sm"
+                        onClick={() => handleDelete(host)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

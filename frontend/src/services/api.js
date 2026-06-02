@@ -9,6 +9,25 @@ const api = axios.create({
   },
 })
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+export const authAPI = {
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  signup: (userData) => api.post('/auth/signup', userData),
+  logout: () => api.post('/auth/logout'),
+  me: () => api.get('/auth/me'),
+  getHosts: () => api.get('/auth/hosts'),
+  createHost: (hostData) => api.post('/auth/hosts', hostData),
+  updateHost: (userId, updates) => api.put(`/auth/hosts/${userId}`, updates),
+  deleteHost: (userId) => api.delete(`/auth/hosts/${userId}`),
+}
+
 // Room API
 export const roomAPI = {
   create: (quizId) => api.post('/rooms/create', { quizId }),
@@ -21,13 +40,13 @@ export const roomAPI = {
 export const quizAPI = {
   create: (quizData) => api.post('/quizzes', quizData),
   get: (quizId) => api.get(`/quizzes/${quizId}`),
+  getPlayable: (quizId) => api.get(`/quizzes/${quizId}/play`),
   getAll: (params) => api.get('/quizzes', { params }),
   update: (quizId, updates) => api.put(`/quizzes/${quizId}`, updates),
   delete: (quizId) => api.delete(`/quizzes/${quizId}`),
   getQuestion: (quizId, questionIndex) =>
     api.get(`/quizzes/${quizId}/question/${questionIndex}`),
   getStatistics: (quizId) => api.get(`/quizzes/${quizId}/statistics`),
-  seed: () => api.post('/seed/quizzes'),
 }
 
 // Scoring API

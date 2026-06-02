@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../hooks/useToast'
 import { useSocket } from '../hooks/useSocket'
 import { roomAPI, quizAPI } from '../services/api'
-import { Button, Input, Card, Loading } from '../components/Common'
+import { Button, Card, Loading } from '../components/Common'
 
 const HostPage = () => {
   const [step, setStep] = useState('select') // select, create, lobby
@@ -16,6 +16,7 @@ const HostPage = () => {
   const [connecting, setConnecting] = useState(false)
 
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, setUserData } = useAuth()
   const { addToast } = useToast()
   const { socket, emit, on, off, socketEvents } = useSocket()
@@ -49,29 +50,16 @@ const HostPage = () => {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await quizAPI.get('https://api.example.com/quizzes')
-      // Mock data for now - in production this would fetch from API
-      const mockQuizzes = [
-        {
-          id: '1',
-          title: 'General Knowledge Quiz',
-          description: 'Test your general knowledge',
-          questionCount: 4,
-        },
-        {
-          id: '2',
-          title: 'Science Quiz',
-          description: 'Test your science knowledge',
-          questionCount: 5,
-        },
-        {
-          id: '3',
-          title: 'History Quiz',
-          description: 'Test your history knowledge',
-          questionCount: 6,
-        },
-      ]
-      setQuizzes(mockQuizzes)
+      const response = await quizAPI.getAll({ limit: 50 })
+      const loadedQuizzes = response.data.data?.quizzes || []
+      setQuizzes(loadedQuizzes)
+
+      if (location.state?.quizId) {
+        const preselectedQuiz = loadedQuizzes.find((quiz) => quiz.quizId === location.state.quizId)
+        if (preselectedQuiz) {
+          setSelectedQuiz(preselectedQuiz)
+        }
+      }
     } catch (error) {
       addToast('Failed to load quizzes', 'error')
     }
@@ -87,25 +75,26 @@ const HostPage = () => {
     setConnecting(true)
 
     try {
-      const response = await roomAPI.create(selectedQuiz.id)
+      const quizId = selectedQuiz.quizId
+      const response = await roomAPI.create(quizId)
 
       if (response.data.data) {
         const code = response.data.data.roomCode
-        const hostId = 'host-' + Math.random().toString(36).substr(2, 9)
 
         setRoomCode(code)
 
         // Store host info
         setUserData({
-          playerId: hostId,
-          playerName: 'Host',
+          ...user,
+          playerId: user.userId,
+          playerName: user.name,
           roomCode: code,
           isHost: true,
-          quizId: selectedQuiz.id,
+          quizId,
         })
 
         // Join room via socket
-        emit(socketEvents.JOIN_ROOM, { roomCode: code, playerName: 'Host' }, (response) => {
+        emit(socketEvents.JOIN_ROOM, { roomCode: code, playerName: user.name }, (response) => {
           setLoading(false)
 
           if (!response || !response.success) {
@@ -127,7 +116,7 @@ const HostPage = () => {
   }
 
   const handleStartQuiz = () => {
-    if (players.length === 0) {
+    if (players.length <= 1) {
       addToast('Wait for players to join before starting', 'info')
       return
     }
@@ -155,9 +144,9 @@ const HostPage = () => {
           <div className="grid grid-cols-1 gap-4">
             {quizzes.map((quiz) => (
               <div
-                key={quiz.id}
+                key={quiz.quizId}
                 className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  selectedQuiz?.id === quiz.id
+                  selectedQuiz?.quizId === quiz.quizId
                     ? 'border-primary bg-indigo-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
@@ -172,11 +161,11 @@ const HostPage = () => {
 
           <Button
             variant="primary"
-            className="w-full mt-6"
+            className="w-full mt-6 !bg-blue-500 !text-white hover:!bg-blue-600"
             disabled={!selectedQuiz || loading}
             onClick={handleCreateRoom}
           >
-            {loading ? 'Creating Room...' : 'Create Room'}
+            {loading ? 'Creating Room...' : 'Create Quiz'}
           </Button>
         </Card>
       </div>
