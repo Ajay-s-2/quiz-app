@@ -15,33 +15,49 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
-  color: #1e293b;
+  background:
+    radial-gradient(circle at top, rgba(129, 140, 248, 0.18), transparent 28%),
+    linear-gradient(135deg, #0f172a 0%, #111827 45%, #312e81 100%);
+  color: #e5eefb;
+  min-height: 100%;
 }
 
 #root {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(129, 140, 248, 0.28);
+  color: #eff6ff;
 }
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-3 text-sm font-semibold text-white shadow-glow transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply px-6 py-3 rounded-lg bg-secondary text-white font-semibold hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-accent to-secondary px-6 py-3 text-sm font-semibold text-white shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-outline {
-    @apply px-6 py-3 rounded-lg border-2 border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-colors;
+    @apply inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-slate-100 shadow-soft backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/15 hover:text-white;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply rounded-3xl border border-white/10 bg-white/10 p-6 text-slate-100 shadow-soft backdrop-blur-xl;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary;
+    @apply w-full rounded-2xl border border-white/15 bg-slate-950/35 px-4 py-3 text-slate-100 placeholder:text-slate-300 shadow-soft outline-none transition duration-200 focus:border-primary focus:ring-2 focus:ring-primary/40;
+  }
+
+  .page-shell {
+    @apply min-h-screen bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.16),transparent_24%)] px-4 py-10 text-slate-100;
+  }
+
+  .glass-panel {
+    @apply rounded-3xl border border-white/10 bg-white/10 shadow-soft backdrop-blur-xl;
   }
 }
