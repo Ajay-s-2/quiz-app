@@ -2,11 +2,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const defaultCorsOrigins = 'http://localhost:5173,http://127.0.0.1:5173';
+const corsOrigins = (process.env.CORS_ORIGIN || defaultCorsOrigins)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export const config = {
   app: {
     env: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.PORT || '5000', 10),
-    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    corsOrigins,
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',

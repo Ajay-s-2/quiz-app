@@ -45,34 +45,34 @@ const LeaderboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center px-4 py-8">
-      <Card className="max-w-2xl w-full">
-        <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Live Leaderboard</h1>
+    <div className="page-shell flex items-center justify-center">
+      <Card className="w-full max-w-2xl">
+        <h1 className="mb-8 text-center text-2xl font-semibold text-slate-950">Live Leaderboard</h1>
 
         <div className="space-y-3">
           {leaderboard.length === 0 ? (
-            <p className="text-center text-gray-600 py-8">No scores yet</p>
+            <p className="py-8 text-center text-sm text-slate-500">No scores yet.</p>
           ) : (
             leaderboard.map((player, idx) => (
               <div
                 key={player.playerId || idx}
-                className={`flex items-center gap-4 p-4 rounded-lg ${
+                className={`flex items-center gap-4 rounded-xl border p-4 ${
                   idx === 0
-                    ? 'bg-yellow-100 border-2 border-yellow-400'
+                    ? 'border-amber-200 bg-amber-50'
                     : idx === 1
-                    ? 'bg-gray-100 border-2 border-gray-400'
+                    ? 'border-slate-300 bg-slate-50'
                     : idx === 2
-                    ? 'bg-orange-100 border-2 border-orange-400'
-                    : 'bg-gray-50 border border-gray-200'
+                    ? 'border-orange-200 bg-orange-50'
+                    : 'border-slate-200 bg-white'
                 }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white ${
                     idx === 0
-                      ? 'bg-yellow-500'
-                      : idx === 1
-                      ? 'bg-gray-500'
-                      : idx === 2
+                      ? 'bg-amber-500'
+                    : idx === 1
+                      ? 'bg-slate-500'
+                    : idx === 2
                       ? 'bg-orange-500'
                       : 'bg-primary'
                   }`}
@@ -81,10 +81,10 @@ const LeaderboardPage = () => {
                 </div>
 
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-800">{player.name}</h3>
+                  <h3 className="font-semibold text-slate-950">{player.name}</h3>
                 </div>
 
-                <div className="text-2xl font-bold text-gray-800">{player.score}</div>
+                <div className="text-2xl font-bold text-slate-950">{player.score}</div>
               </div>
             ))
           )}

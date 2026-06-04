@@ -81,15 +81,16 @@ const JoinPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center px-4 py-8">
-      <Card className="max-w-md w-full">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Join Quiz</h1>
+    <div className="page-shell flex items-center justify-center">
+      <Card className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-semibold text-slate-950">Join Quiz</h1>
+          <p className="mt-1 text-sm text-slate-500">Enter your name and room code.</p>
+        </div>
 
         <form onSubmit={handleJoin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Your Name
-            </label>
+            <label className="field-label">Name</label>
             <Input
               type="text"
               placeholder="Enter your name"
@@ -101,9 +102,7 @@ const JoinPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Room Code
-            </label>
+            <label className="field-label">Room Code</label>
             <Input
               type="text"
               placeholder="Enter 6-digit code"
@@ -112,6 +111,7 @@ const JoinPage = () => {
               disabled={loading}
               required
               maxLength="6"
+              className="text-center font-mono text-lg uppercase"
             />
           </div>
 

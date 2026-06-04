@@ -9,6 +9,12 @@ const api = axios.create({
   },
 })
 
+export const getApiErrorMessage = (error, fallback = 'Something went wrong') => {
+  const data = error.response?.data
+  const message = data?.errors?.[0] || data?.message || fallback
+  return message.replaceAll('"', '')
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken')
   if (token) {

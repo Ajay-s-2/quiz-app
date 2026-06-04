@@ -112,27 +112,27 @@ const AdminDashboard = () => {
   if (loading && hosts.length === 0) return <Loading />
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div className="page-shell">
+      <div className="mx-auto max-w-6xl">
+        <div className="page-header">
           <div>
-            <h1 className="text-4xl font-bold text-white">Host Accounts</h1>
-            <p className="text-indigo-100 mt-2">Admin manages host access only</p>
+            <h1 className="text-3xl font-semibold text-slate-950">Host Accounts</h1>
+            <p className="mt-1 text-sm text-slate-500">{hosts.length} total</p>
           </div>
-          <Button variant="outline" className="text-white border-white" onClick={logout}>
+          <Button variant="outline" onClick={logout}>
             Logout
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
           <Card>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
+            <h2 className="mb-4 text-lg font-semibold text-slate-950">
               {editingHostId ? 'Edit Host' : 'Create Host'}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                <label className="field-label">Name</label>
                 <Input
                   value={formData.name}
                   onChange={(event) => handleChange('name', event.target.value)}
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="field-label">Email</label>
                 <Input
                   type="email"
                   value={formData.email}
@@ -151,8 +151,8 @@ const AdminDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password {editingHostId ? '(leave blank to keep current)' : ''}
+                <label className="field-label">
+                  Password {editingHostId ? '(optional)' : ''}
                 </label>
                 <Input
                   type="password"
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Button type="submit" variant="primary" disabled={saving} className="flex-1">
                   {saving ? 'Saving...' : editingHostId ? 'Update' : 'Create'}
                 </Button>
@@ -178,27 +178,27 @@ const AdminDashboard = () => {
 
           <div className="space-y-4">
             {hosts.length === 0 ? (
-              <Card className="text-center py-10">
-                <p className="text-gray-600">No host accounts yet.</p>
+              <Card className="py-10 text-center">
+                <p className="text-sm text-slate-500">No host accounts.</p>
               </Card>
             ) : (
               hosts.map((host) => (
                 <Card key={host.userId}>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                       <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-bold text-gray-800">{host.name}</h3>
+                        <h3 className="text-lg font-semibold text-slate-950">{host.name}</h3>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          className={`status-pill ${
                             host.status === 'active'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-200 text-gray-700'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           {host.status}
                         </span>
                       </div>
-                      <p className="text-gray-600">{host.email}</p>
+                      <p className="mt-1 text-sm text-slate-500">{host.email}</p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">

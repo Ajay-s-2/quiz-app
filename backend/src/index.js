@@ -13,7 +13,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // Middleware
-app.use(cors({ origin: config.app.corsOrigin }));
+app.use(cors({ origin: config.app.corsOrigins }));
 app.use(express.json());
 
 // Request logging

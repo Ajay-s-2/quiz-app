@@ -2,10 +2,10 @@ import React from 'react'
 
 export const Loading = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.14),transparent_18%),linear-gradient(135deg,#0f172a_0%,#111827_45%,#312e81_100%)]">
-      <div className="glass-panel px-8 py-8 text-center">
-        <div className="mx-auto inline-block h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-primary"></div>
-        <p className="mt-4 text-lg text-slate-100">Loading your quiz space...</p>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+      <div className="rounded-xl border border-slate-200 bg-white px-8 py-7 text-center shadow-soft">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary"></div>
+        <p className="mt-4 text-sm font-medium text-slate-600">Loading...</p>
       </div>
     </div>
   )
@@ -17,12 +17,12 @@ export const Button = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold shadow-soft transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary/40'
+  const baseClasses = 'inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
   const variants = {
-    primary: 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-glow',
-    secondary: 'bg-gradient-to-r from-accent to-secondary text-white hover:shadow-glow',
-    outline: 'border border-white/20 bg-white/10 text-slate-100 hover:bg-white/15 hover:text-white',
-    danger: 'bg-gradient-to-r from-danger to-rose-500 text-white hover:shadow-glow',
+    primary: 'bg-primary text-white hover:bg-primary-dark focus:ring-primary/30',
+    secondary: 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500/30',
+    outline: 'border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 focus:ring-primary/25',
+    danger: 'bg-danger text-white hover:bg-red-700 focus:ring-red-500/30',
   }
 
   return (
@@ -36,15 +36,46 @@ export const Button = ({
 }
 
 export const Card = ({ children, className = '' }) => {
-  return <div className={`glass-panel p-6 ${className}`}>{children}</div>
+  return <div className={`rounded-xl border border-slate-200 bg-white p-6 text-slate-900 shadow-soft ${className}`}>{children}</div>
 }
 
 export const Input = ({ className = '', ...props }) => {
   return (
     <input
-      className={`w-full rounded-2xl border border-white/15 bg-slate-950/35 px-4 py-3 text-slate-100 placeholder:text-slate-300 shadow-soft outline-none transition duration-200 focus:border-primary focus:ring-2 focus:ring-primary/40 ${className}`}
+      className={`input-field ${className}`}
       {...props}
     />
+  )
+}
+
+export const EyeIcon = ({ hidden = false, className = '' }) => {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12 18 18.75 12 18.75 2.25 12 2.25 12Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 9.25a2.75 2.75 0 1 1 0 5.5 2.75 2.75 0 0 1 0-5.5Z"
+      />
+      {hidden && (
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M4.5 4.5 19.5 19.5"
+        />
+      )}
+    </svg>
   )
 }
 
@@ -53,4 +84,5 @@ export default {
   Button,
   Card,
   Input,
+  EyeIcon,
 }

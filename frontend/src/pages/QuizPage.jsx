@@ -23,6 +23,7 @@ const QuizPage = () => {
   const { user } = useAuth()
   const { addToast } = useToast()
   const { socket, emit, on, off, socketEvents } = useSocket()
+  const isHost = user?.isHost
 
   // Initialize quiz
   useEffect(() => {
@@ -100,6 +101,7 @@ const QuizPage = () => {
   }
 
   const handleAnswerSelect = (answerIndex) => {
+    if (isHost) return
     if (answered || timeLeft <= 0) return
 
     setSelectedAnswer(answerIndex)
@@ -124,7 +126,7 @@ const QuizPage = () => {
   const endCurrentQuestion = () => {
     emit(socketEvents.NEXT_QUESTION, {
       roomCode,
-      hostId: user.playerId,
+      hostId: user.userId || user.playerId,
       questionIndex: currentQuestionIndex,
     }, (response) => {
       if (!response?.success) {
@@ -139,7 +141,7 @@ const QuizPage = () => {
     if (nextIndex >= quiz.questions.length) {
       // Quiz ended
       if (user.isHost) {
-        emit(socketEvents.END_QUIZ, { roomCode, hostId: user.playerId }, (response) => {
+        emit(socketEvents.END_QUIZ, { roomCode, hostId: user.userId || user.playerId }, (response) => {
           if (!response?.success) {
             addToast(response?.error || 'Failed to end quiz', 'error')
           }
@@ -164,7 +166,7 @@ const QuizPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center px-4 py-8">
+    <div className="page-shell flex items-center justify-center">
       <div className="w-full max-w-4xl">
         {/* Progress */}
         <div className="mb-6">
@@ -172,16 +174,16 @@ const QuizPage = () => {
             current={currentQuestionIndex + 1}
             total={quiz.questions.length}
           />
-          <p className="text-white text-sm mt-2">
+          <p className="mt-2 text-sm font-medium text-slate-600">
             Question {currentQuestionIndex + 1} of {quiz.questions.length}
           </p>
         </div>
 
         {/* Timer and Question */}
         <Card className="mb-6">
-          <div className="flex justify-between items-start mb-6">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              <h2 className="text-2xl font-semibold leading-snug text-slate-950">
                 {currentQuestion.questionText}
               </h2>
             </div>
@@ -190,17 +192,23 @@ const QuizPage = () => {
             </div>
           </div>
 
+          {isHost && (
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm font-medium text-blue-800">Host view. Players are answering.</p>
+            </div>
+          )}
+
           {/* Answer Options */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {currentQuestion.options.map((option, idx) => (
               <button
                 key={idx}
                 onClick={() => handleAnswerSelect(idx)}
-                disabled={answered || timeLeft <= 0}
-                className={`p-4 rounded-lg font-semibold text-left transition-all ${
+                disabled={isHost || answered || timeLeft <= 0}
+                className={`min-h-[64px] rounded-xl border p-4 text-left font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/25 focus:ring-offset-2 ${
                   selectedAnswer === idx
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    ? 'border-primary bg-primary text-white shadow-glow'
+                    : 'border-slate-200 bg-white text-slate-800 hover:border-primary/50 hover:bg-blue-50'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {option}
@@ -208,11 +216,9 @@ const QuizPage = () => {
             ))}
           </div>
 
-          {answered && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                Answer submitted! Waiting for next question...
-              </p>
+          {!isHost && answered && (
+            <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm font-medium text-blue-800">Answer submitted.</p>
             </div>
           )}
         </Card>
@@ -220,15 +226,15 @@ const QuizPage = () => {
         {/* Leaderboard */}
         {leaderboard.length > 0 && (
           <Card>
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Leaderboard</h3>
+            <h3 className="mb-4 text-lg font-semibold text-slate-950">Leaderboard</h3>
             <div className="space-y-2">
               {leaderboard.slice(0, 5).map((player, idx) => (
-                <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 p-3">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-primary">#{player.rank}</span>
-                    <span className="text-gray-800">{player.name}</span>
+                    <span className="text-slate-800">{player.name}</span>
                   </div>
-                  <span className="font-bold text-gray-800">{player.score}</span>
+                  <span className="font-bold text-slate-950">{player.score}</span>
                 </div>
               ))}
             </div>

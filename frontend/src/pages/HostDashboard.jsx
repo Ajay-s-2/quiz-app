@@ -53,12 +53,12 @@ const HostDashboard = () => {
   if (loading && quizzes.length === 0) return <Loading />
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div className="page-shell">
+      <div className="mx-auto max-w-7xl">
+        <div className="page-header">
           <div>
-            <h1 className="text-4xl font-bold text-white">Host Dashboard</h1>
-            <p className="text-indigo-100 mt-2">{user?.name}</p>
+            <h1 className="text-3xl font-semibold text-slate-950">Quizzes</h1>
+            <p className="mt-1 text-sm text-slate-500">{user?.name}</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -72,17 +72,17 @@ const HostDashboard = () => {
             <Button variant="secondary" onClick={() => navigate('/host')}>
               Host Live Room
             </Button>
-            <Button variant="outline" className="text-white border-white" onClick={logout}>
+            <Button variant="outline" onClick={logout}>
               Logout
             </Button>
           </div>
         </div>
 
-        <Card className="mb-6 bg-white">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="mb-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Input
               type="text"
-              placeholder="Search quizzes by title or description..."
+              placeholder="Search quizzes"
               value={searchTerm}
               onChange={(event) => {
                 setSearchTerm(event.target.value)
@@ -90,14 +90,14 @@ const HostDashboard = () => {
               }}
             />
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg"
+              className="select-field"
               value={categoryFilter}
               onChange={(event) => {
                 setCategoryFilter(event.target.value)
                 setPage(1)
               }}
             >
-              <option value="">All Categories</option>
+              <option value="">All categories</option>
               <option value="General">General Knowledge</option>
               <option value="Science">Science</option>
               <option value="History">History</option>
@@ -109,21 +109,23 @@ const HostDashboard = () => {
 
         <div className="grid grid-cols-1 gap-4">
           {quizzes.length === 0 ? (
-            <Card className="text-center py-8">
-              <p className="text-gray-600">No quizzes found.</p>
+            <Card className="py-10 text-center">
+              <p className="text-sm text-slate-500">No quizzes found.</p>
             </Card>
           ) : (
             quizzes.map((quiz) => (
-              <Card key={quiz.quizId} className="bg-white hover:shadow-lg transition-shadow">
-                <div className="flex flex-col md:flex-row md:justify-between gap-4 mb-4">
+              <Card key={quiz.quizId} className="transition hover:border-slate-300 hover:shadow-lg">
+                <div className="mb-4 flex flex-col gap-4 md:flex-row md:justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">{quiz.title}</h3>
-                    <p className="text-gray-600">{quiz.description}</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Category: <span className="font-semibold">{quiz.category}</span>
+                    <h3 className="text-lg font-semibold text-slate-950">{quiz.title}</h3>
+                    {quiz.description && (
+                      <p className="mt-1 text-sm text-slate-600">{quiz.description}</p>
+                    )}
+                    <p className="mt-2 text-sm text-slate-500">
+                      <span className="font-medium text-slate-700">{quiz.category}</span>
                     </p>
                   </div>
-                  <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-semibold self-start">
+                  <span className="status-pill self-start bg-blue-50 text-blue-700">
                     {quiz.questionCount || 0} Questions
                   </span>
                 </div>
@@ -164,20 +166,18 @@ const HostDashboard = () => {
         </div>
 
         {quizzes.length > 0 && (
-          <div className="flex justify-center gap-4 mt-8">
+          <div className="mt-8 flex items-center justify-center gap-4">
             <Button
               variant="outline"
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
-              className="text-white border-white hover:bg-white hover:text-indigo-600"
             >
               Previous
             </Button>
-            <span className="text-white py-2">Page {page}</span>
+            <span className="py-2 text-sm font-medium text-slate-600">Page {page}</span>
             <Button
               variant="outline"
               onClick={() => setPage(page + 1)}
-              className="text-white border-white hover:bg-white hover:text-indigo-600"
             >
               Next
             </Button>

@@ -93,8 +93,13 @@ const HostPage = () => {
           quizId,
         })
 
-        // Join room via socket
-        emit(socketEvents.JOIN_ROOM, { roomCode: code, playerName: user.name }, (response) => {
+        // Join socket room as host without creating a player entry
+        emit(socketEvents.JOIN_ROOM, {
+          roomCode: code,
+          playerName: user.name,
+          isHost: true,
+          hostId: user.userId,
+        }, (response) => {
           setLoading(false)
 
           if (!response || !response.success) {
@@ -116,12 +121,12 @@ const HostPage = () => {
   }
 
   const handleStartQuiz = () => {
-    if (players.length <= 1) {
+    if (players.length < 1) {
       addToast('Wait for players to join before starting', 'info')
       return
     }
 
-    emit(socketEvents.START_QUIZ, { roomCode, hostId: user.playerId }, (response) => {
+    emit(socketEvents.START_QUIZ, { roomCode, hostId: user.userId || user.playerId }, (response) => {
       if (response.success) {
         addToast('Quiz started!', 'success')
         navigate(`/quiz/${roomCode}`)
@@ -137,31 +142,42 @@ const HostPage = () => {
 
   if (step === 'select') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center px-4 py-8">
-        <Card className="max-w-2xl w-full">
-          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Select Quiz</h1>
+      <div className="page-shell flex items-center justify-center">
+        <Card className="w-full max-w-2xl">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-semibold text-slate-950">Select Quiz</h1>
+            <p className="mt-1 text-sm text-slate-500">Choose a quiz to host.</p>
+          </div>
 
           <div className="grid grid-cols-1 gap-4">
             {quizzes.map((quiz) => (
               <div
                 key={quiz.quizId}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                className={`cursor-pointer rounded-xl border p-4 transition ${
                   selectedQuiz?.quizId === quiz.quizId
-                    ? 'border-primary bg-indigo-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary bg-blue-50 ring-2 ring-primary/10'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
                 onClick={() => setSelectedQuiz(quiz)}
               >
-                <h3 className="font-bold text-lg text-gray-800">{quiz.title}</h3>
-                <p className="text-gray-600">{quiz.description}</p>
-                <p className="text-sm text-gray-500 mt-2">{quiz.questionCount} questions</p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-950">{quiz.title}</h3>
+                    {quiz.description && (
+                      <p className="mt-1 text-sm text-slate-600">{quiz.description}</p>
+                    )}
+                  </div>
+                  <span className="status-pill self-start bg-slate-100 text-slate-700">
+                    {quiz.questionCount} questions
+                  </span>
+                </div>
               </div>
             ))}
           </div>
 
           <Button
             variant="primary"
-            className="w-full mt-6 !bg-blue-500 !text-white hover:!bg-blue-600"
+            className="mt-6 w-full"
             disabled={!selectedQuiz || loading}
             onClick={handleCreateRoom}
           >
@@ -174,25 +190,25 @@ const HostPage = () => {
 
   if (step === 'lobby') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center px-4 py-8">
-        <Card className="max-w-2xl w-full">
-          <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Quiz Lobby</h1>
+      <div className="page-shell flex items-center justify-center">
+        <Card className="w-full max-w-2xl">
+          <h1 className="mb-6 text-center text-2xl font-semibold text-slate-950">Quiz Lobby</h1>
 
-          <div className="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Room Code</h2>
+          <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
+            <h2 className="mb-3 text-sm font-semibold text-slate-700">Room Code</h2>
             <div className="flex items-center gap-4">
               <input
                 type="text"
                 value={roomCode}
                 readOnly
-                className="flex-1 px-4 py-3 text-2xl font-bold text-center border-2 border-indigo-400 rounded-lg bg-white"
+                className="min-w-0 flex-1 rounded-lg border border-blue-200 bg-white px-4 py-3 text-center font-mono text-2xl font-bold text-slate-950"
               />
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(roomCode)
                   addToast('Room code copied!', 'success')
                 }}
-                className="px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                className="rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
               >
                 Copy
               </button>
@@ -200,20 +216,20 @@ const HostPage = () => {
           </div>
 
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Players ({players.length})</h2>
+            <h2 className="mb-4 text-lg font-semibold text-slate-950">Players ({players.length})</h2>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {players.length === 0 ? (
-                <p className="text-gray-600 text-center py-4">Waiting for players...</p>
+                <p className="py-4 text-center text-sm text-slate-500">Waiting for players...</p>
               ) : (
                 players.map((player, idx) => (
                   <div
                     key={player.playerId || idx}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center gap-3 rounded-lg bg-slate-50 p-3"
                   >
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                       {idx + 1}
                     </div>
-                    <span className="font-medium text-gray-800">{player.name}</span>
+                    <span className="font-medium text-slate-800">{player.name}</span>
                   </div>
                 ))
               )}

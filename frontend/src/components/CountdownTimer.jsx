@@ -6,8 +6,8 @@ export const CountdownTimer = ({ seconds, isActive }) => {
 
   return (
     <div
-      className={`text-4xl font-bold ${
-        isActive ? 'text-danger animate-pulse' : 'text-gray-600'
+      className={`rounded-lg px-3 py-2 text-3xl font-bold ${
+        isActive ? 'bg-red-50 text-danger' : 'bg-slate-100 text-slate-500'
       }`}
     >
       {minutes}:{secs.toString().padStart(2, '0')}

@@ -64,32 +64,32 @@ const LobbyPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center px-4 py-8">
-      <Card className="max-w-2xl w-full">
-        <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Waiting Room</h1>
+    <div className="page-shell flex items-center justify-center">
+      <Card className="w-full max-w-2xl">
+        <h1 className="mb-6 text-center text-2xl font-semibold text-slate-950">Waiting Room</h1>
 
-        <div className="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Room Code</h2>
-          <p className="text-2xl font-bold text-indigo-600 text-center">{roomCode}</p>
+        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
+          <h2 className="mb-2 text-sm font-semibold text-slate-700">Room Code</h2>
+          <p className="text-center font-mono text-3xl font-bold text-primary">{roomCode}</p>
         </div>
 
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <h2 className="mb-4 text-lg font-semibold text-slate-950">
             Players ({players.length})
           </h2>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {players.length === 0 ? (
-              <p className="text-gray-600 text-center py-4">Waiting for players...</p>
+              <p className="py-4 text-center text-sm text-slate-500">Waiting for players...</p>
             ) : (
               players.map((player, idx) => (
                 <div
                   key={player.playerId || idx}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center gap-3 rounded-lg bg-slate-50 p-3"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                     {idx + 1}
                   </div>
-                  <span className="font-medium text-gray-800">{player.name}</span>
+                  <span className="font-medium text-slate-800">{player.name}</span>
                 </div>
               ))
             )}
@@ -98,8 +98,8 @@ const LobbyPage = () => {
 
         {!isHost && (
           <div className="text-center">
-            <p className="text-gray-600 mb-3">Waiting for host to start the quiz...</p>
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mb-3 text-sm text-slate-500">Waiting for host...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-primary"></div>
           </div>
         )}
       </Card>

@@ -10,7 +10,7 @@ class SocketManager {
   constructor(httpServer) {
     this.io = new Server(httpServer, {
       cors: {
-        origin: config.app.corsOrigin,
+        origin: config.app.corsOrigins,
         credentials: true,
       },
     });
@@ -49,7 +49,7 @@ class SocketManager {
 
   async handleJoinRoom(socket, data, callback) {
     callback = typeof callback === 'function' ? callback : () => {};
-    const { roomCode, playerName } = data;
+    const { roomCode, playerName, isHost, hostId } = data;
 
     try {
       // Get or create player in room
@@ -62,6 +62,28 @@ class SocketManager {
 
       if (room.status === 'completed') {
         return callback({ success: false, error: 'Quiz has ended' });
+      }
+
+      if (isHost) {
+        if (!hostId || room.hostId !== hostId) {
+          return callback({ success: false, error: 'Only host can join as host' });
+        }
+
+        socket.join(roomCode);
+        socket.data.roomCode = roomCode;
+        socket.data.playerId = hostId;
+        socket.data.playerName = playerName;
+        socket.data.isHost = true;
+
+        logger.info(`Host ${hostId} joined room ${roomCode}`);
+
+        return callback({
+          success: true,
+          playerId: hostId,
+          quizId: room.quizId,
+          players,
+          isHost: true,
+        });
       }
 
       // Find or create player
@@ -78,6 +100,7 @@ class SocketManager {
       socket.data.roomCode = roomCode;
       socket.data.playerId = playerId;
       socket.data.playerName = playerName;
+      socket.data.isHost = false;
 
       logger.info(`Player ${playerName} joined room ${roomCode}`);
 
@@ -173,6 +196,10 @@ class SocketManager {
     const playerId = socket.data.playerId;
 
     try {
+      if (socket.data.isHost) {
+        return callback({ success: false, error: 'Host cannot submit answers' });
+      }
+
       if (!roomCode || questionIndex === undefined || answerIndex === undefined) {
         return callback({ success: false, error: 'Invalid data' });
       }
@@ -304,16 +331,24 @@ class SocketManager {
     }
   }
 
-  handleDisconnect(socket) {
+  async handleDisconnect(socket) {
     logger.info(`Client disconnected: ${socket.id}`);
-    const { roomCode, playerId } = socket.data;
+    const { roomCode, playerId, isHost } = socket.data;
 
-    if (roomCode && playerId) {
-      // Notify room of player leaving
-      this.io.to(roomCode).emit('player-left', {
-        playerId,
-        message: 'Player disconnected',
-      });
+    if (roomCode && playerId && !isHost) {
+      try {
+        await PlayerRepository.removePlayer(roomCode, playerId);
+        const updatedPlayers = await PlayerRepository.getPlayers(roomCode);
+
+        this.io.to(roomCode).emit('player-left', {
+          playerId,
+          players: updatedPlayers,
+          playerCount: updatedPlayers.length,
+          message: 'Player disconnected',
+        });
+      } catch (error) {
+        logger.error(`Error handling disconnect: ${error.message}`);
+      }
     }
   }
 

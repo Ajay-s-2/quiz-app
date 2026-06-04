@@ -36,92 +36,83 @@ const QuizStatistics = () => {
   if (!stats) return <Card>No statistics available</Card>
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="page-shell">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="page-header">
           <div>
-            <h1 className="text-4xl font-bold text-white">{stats.title}</h1>
-            <p className="text-indigo-100 mt-2">Category: {stats.category}</p>
+            <h1 className="text-3xl font-semibold text-slate-950">{stats.title}</h1>
+            <p className="mt-1 text-sm text-slate-500">{stats.category}</p>
           </div>
           <Button
             variant="outline"
             onClick={() => navigate('/host/dashboard')}
-            className="text-white border-white hover:bg-white hover:text-indigo-600"
           >
-            Back to Dashboard
+            Dashboard
           </Button>
         </div>
 
         {/* Statistics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Total Questions */}
-          <Card className="bg-white text-center">
-            <div className="mb-4">
-              <div className="text-4xl font-bold text-indigo-600">{stats.totalQuestions}</div>
-              <p className="text-gray-600 mt-2">Total Questions</p>
-            </div>
+          <Card className="text-center">
+            <div className="text-4xl font-bold text-primary">{stats.totalQuestions}</div>
+            <p className="mt-2 text-sm text-slate-500">Questions</p>
           </Card>
 
           {/* Total Plays */}
-          <Card className="bg-white text-center">
-            <div className="mb-4">
-              <div className="text-4xl font-bold text-green-600">{stats.totalPlays}</div>
-              <p className="text-gray-600 mt-2">Total Plays</p>
-            </div>
+          <Card className="text-center">
+            <div className="text-4xl font-bold text-emerald-600">{stats.totalPlays}</div>
+            <p className="mt-2 text-sm text-slate-500">Plays</p>
           </Card>
 
           {/* Average Score */}
-          <Card className="bg-white text-center">
-            <div className="mb-4">
-              <div className="text-4xl font-bold text-blue-600">{stats.averageScore}%</div>
-              <p className="text-gray-600 mt-2">Average Score</p>
-            </div>
+          <Card className="text-center">
+            <div className="text-4xl font-bold text-blue-600">{stats.averageScore}%</div>
+            <p className="mt-2 text-sm text-slate-500">Average Score</p>
           </Card>
 
           {/* Total Players */}
-          <Card className="bg-white text-center">
-            <div className="mb-4">
-              <div className="text-4xl font-bold text-purple-600">{stats.totalPlayers}</div>
-              <p className="text-gray-600 mt-2">Total Players</p>
-            </div>
+          <Card className="text-center">
+            <div className="text-4xl font-bold text-violet-600">{stats.totalPlayers}</div>
+            <p className="mt-2 text-sm text-slate-500">Players</p>
           </Card>
         </div>
 
         {/* Details Card */}
-        <Card className="bg-white">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Quiz Details</h2>
+        <Card>
+          <h2 className="mb-6 text-xl font-semibold text-slate-950">Details</h2>
 
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700 font-semibold">Quiz ID:</span>
-              <span className="text-gray-600 font-mono">{quizId}</span>
+            <div className="flex flex-col gap-1 rounded-lg bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <span className="font-semibold text-slate-700">Quiz ID</span>
+              <span className="font-mono text-sm text-slate-600">{quizId}</span>
             </div>
 
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700 font-semibold">Created:</span>
-              <span className="text-gray-600">
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
+              <span className="font-semibold text-slate-700">Created</span>
+              <span className="text-slate-600">
                 {stats.createdAt ? new Date(stats.createdAt).toLocaleDateString() : 'N/A'}
               </span>
             </div>
 
-            <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-              <span className="text-gray-700 font-semibold">Category:</span>
-              <span className="text-gray-600">{stats.category}</span>
+            <div className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
+              <span className="font-semibold text-slate-700">Category</span>
+              <span className="text-slate-600">{stats.category}</span>
             </div>
 
             {stats.totalPlays > 0 && (
               <>
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Avg Players per Game:</span>
-                  <span className="text-gray-600">
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
+                  <span className="font-semibold text-slate-700">Avg Players</span>
+                  <span className="text-slate-600">
                     {(stats.totalPlayers / stats.totalPlays).toFixed(1)}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700 font-semibold">Engagement Rate:</span>
-                  <span className="text-green-600 font-semibold">
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 p-4">
+                  <span className="font-semibold text-slate-700">Engagement</span>
+                  <span className="font-semibold text-emerald-600">
                     {stats.totalPlays > 0 ? '100%' : 'N/A'}
                   </span>
                 </div>
@@ -131,43 +122,43 @@ const QuizStatistics = () => {
         </Card>
 
         {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Performance Info */}
-          <Card className="bg-white">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Performance</h3>
+          <Card>
+            <h3 className="mb-4 text-lg font-semibold text-slate-950">Performance</h3>
             <div className="space-y-3">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-gray-700">
+              <div className="rounded-lg bg-blue-50 p-3">
+                <p className="text-sm text-slate-700">
                   <span className="font-semibold">Difficulty:</span> {stats.averageScore > 80 ? 'Easy' : stats.averageScore > 60 ? 'Medium' : 'Hard'}
                 </p>
               </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Recommendation:</span> {stats.totalPlays < 10 ? 'New quiz' : 'Well-played quiz'}
+              <div className="rounded-lg bg-emerald-50 p-3">
+                <p className="text-sm text-slate-700">
+                  <span className="font-semibold">Status:</span> {stats.totalPlays < 10 ? 'New quiz' : 'Well-played'}
                 </p>
               </div>
             </div>
           </Card>
 
           {/* Usage Info */}
-          <Card className="bg-white">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Usage</h3>
+          <Card>
+            <h3 className="mb-4 text-lg font-semibold text-slate-950">Usage</h3>
             <div className="space-y-3">
               {stats.totalPlays === 0 ? (
-                <div className="p-3 bg-yellow-50 rounded-lg">
-                  <p className="text-sm text-gray-700">
+                <div className="rounded-lg bg-amber-50 p-3">
+                  <p className="text-sm text-slate-700">
                     <span className="font-semibold">Status:</span> Not yet played
                   </p>
                 </div>
               ) : (
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-700">
-                    <span className="font-semibold">Status:</span> Active & Popular
+                <div className="rounded-lg bg-emerald-50 p-3">
+                  <p className="text-sm text-slate-700">
+                    <span className="font-semibold">Status:</span> Active
                   </p>
                 </div>
               )}
-              <div className="p-3 bg-indigo-50 rounded-lg">
-                <p className="text-sm text-gray-700">
+              <div className="rounded-lg bg-blue-50 p-3">
+                <p className="text-sm text-slate-700">
                   <span className="font-semibold">Questions:</span> {stats.totalQuestions} questions
                 </p>
               </div>
@@ -176,18 +167,18 @@ const QuizStatistics = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mt-8">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button
             variant="primary"
             onClick={() => navigate(`/host/quiz/${quizId}/edit`)}
-            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+            className="flex-1"
           >
             Edit Quiz
           </Button>
           <Button
             variant="outline"
             onClick={() => fetchStatistics()}
-            className="flex-1 text-white border-white hover:bg-white hover:text-indigo-600"
+            className="flex-1"
           >
             Refresh Stats
           </Button>
